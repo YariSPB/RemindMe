@@ -13,10 +13,43 @@ namespace RemindMe
         double initLatitude = 42.098414;
         double initLongitude = 19.096313;
         bool visitedAll = false;
+        bool reminderworkStarted = false;
 
         public MainPage()
         {
             InitializeComponent();
+        }
+
+        private async void OnStartReminderClicked(object sender, EventArgs e) {
+            if (StartReminderBtn.IsEnabled) {
+                StartReminderBtn.IsEnabled = false;
+                if (!reminderworkStarted)
+                {
+                    Location location = await GetCurrentLocation();
+                    if (location != null && !location.IsFromMockProvider)
+                    {
+                        reminderworkStarted = true;
+                        StartReminderBtn.Text = $"Stop reminder.";
+                        //StartReminderBtn.BorderColor = new Color(255, 192, 203);
+                        StartReminderBtn.TextColor = Colors.Pink;
+                   
+                        GeoCoordLabel.Text = $"Latitude: {location.Latitude}, Longitude: {location.Longitude}, Altitude: {location.Altitude}";
+                    }
+                    else
+                    {
+                        GeoCoordLabel.Text = $"Failed collecting geolocation. Try again.";
+                    }
+                }
+                else
+                {
+                    reminderworkStarted = false;
+                    StartReminderBtn.Text = $"Begin reminding, please!";
+                    //StartReminderBtn.BorderColor = new Color(0, 0, 255);
+                    StartReminderBtn.TextColor = Colors.DarkBlue;
+                }
+
+                StartReminderBtn.IsEnabled = true;
+            }         
         }
 
         private void OnCounterClicked(object sender, EventArgs e)

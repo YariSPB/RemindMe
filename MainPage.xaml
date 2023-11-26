@@ -28,6 +28,15 @@
                 FontSize="18"
                 HorizontalOptions="Center" />
 
+
+            <Button
+                x:Name="StartReminderBtn"
+                Text="Begin reminding, please!"
+                SemanticProperties.Hint="Click to start reminder"
+                Clicked="OnStartReminderClicked"
+                HorizontalOptions="Center" />
+            
+            
             <Button
                 x:Name="CounterBtn"
                 Text="Click me"
