@@ -8,48 +8,78 @@ namespace RemindMe
         int count = 0;
         double targetLatitude = 42.099077;
         double targetLongitude = 19.093777;
+        Location dummy = new Location(latitude: 42.099077, longitude: 19.093777);
         //target 42.099077, 19.093777
         //init 42.098414, 19.096313
         double initLatitude = 42.098414;
         double initLongitude = 19.096313;
         bool visitedAll = false;
         bool reminderworkStarted = false;
+        Location startLocation = null;
+        int allowedDistanceMeters = 30;
+        CancellationTokenSource cancellationTokenReminder = new CancellationTokenSource();
 
         public MainPage()
         {
             InitializeComponent();
         }
 
-        private async void OnStartReminderClicked(object sender, EventArgs e) {
-            if (StartReminderBtn.IsEnabled) {
-                StartReminderBtn.IsEnabled = false;
-                if (!reminderworkStarted)
+        private async void OnStartReminderClicked(object sender, EventArgs e)
+        {
+            if (!StartReminderBtn.IsEnabled)
+            {
+                return;
+            }
+
+            StartReminderBtn.IsEnabled = false;
+            if (!reminderworkStarted)
+            {
+                startLocation = await GetCurrentLocation();
+                if (startLocation != null && !startLocation.IsFromMockProvider)
                 {
-                    Location location = await GetCurrentLocation();
-                    if (location != null && !location.IsFromMockProvider)
-                    {
-                        reminderworkStarted = true;
-                        StartReminderBtn.Text = $"Stop reminder.";
-                        //StartReminderBtn.BorderColor = new Color(255, 192, 203);
-                        StartReminderBtn.TextColor = Colors.Pink;
-                   
-                        GeoCoordLabel.Text = $"Latitude: {location.Latitude}, Longitude: {location.Longitude}, Altitude: {location.Altitude}";
-                    }
-                    else
-                    {
-                        GeoCoordLabel.Text = $"Failed collecting geolocation. Try again.";
-                    }
+                    reminderworkStarted = true;
+                    StartReminderBtn.Text = $"Stop reminder.";
+                    StartReminderBtn.TextColor = Colors.Pink;
+                    GeoCoordLabel.Text = $"Latitude: {startLocation.Latitude}, Longitude: {startLocation.Longitude}";
+                    _ = PeriodicCheckHomeAsync(TimeSpan.FromSeconds(5), cancellationTokenReminder.Token);
                 }
                 else
                 {
-                    reminderworkStarted = false;
-                    StartReminderBtn.Text = $"Begin reminding, please!";
-                    //StartReminderBtn.BorderColor = new Color(0, 0, 255);
-                    StartReminderBtn.TextColor = Colors.DarkBlue;
+                    GeoCoordLabel.Text = $"Failed collecting geolocation. Try again.";
                 }
+            }
+            else
+            {
+                reminderworkStarted = false;
+                cancellationTokenReminder.Cancel();
+                StartReminderBtn.Text = $"Begin reminding, please!";
+                GeoCoordLabel.Text = $"Finished. Shall we start again?";
+                StartReminderBtn.TextColor = Colors.DarkBlue;
+            }
 
-                StartReminderBtn.IsEnabled = true;
-            }         
+            StartReminderBtn.IsEnabled = true;
+        }
+
+        private async Task PeriodicCheckHomeAsync(TimeSpan interval, CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(interval, cancellationToken);
+
+                Location curLocation = await GetCurrentLocation();
+                if(curLocation != null && !curLocation.IsFromMockProvider)
+                {
+                    int distanceToHomeM = (int) (Location.CalculateDistance(dummy, curLocation, DistanceUnits.Kilometers) * 1000);
+                    if (distanceToHomeM < allowedDistanceMeters)
+                    {
+                        GeoCoordLabel.Text = $"Close to home: {distanceToHomeM} meters.";
+                    }
+                    else
+                    {
+                        GeoCoordLabel.Text = $"Far from home: {distanceToHomeM} meters";
+                    }
+                }
+            }
         }
 
         private void OnCounterClicked(object sender, EventArgs e)
