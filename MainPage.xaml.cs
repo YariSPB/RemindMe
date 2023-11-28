@@ -17,7 +17,7 @@ namespace RemindMe
         bool reminderworkStarted = false;
         Location startLocation = null;
         int allowedDistanceMeters = 30;
-        CancellationTokenSource cancellationTokenReminder = new CancellationTokenSource();
+        CancellationTokenSource cancellationTokenReminder;
 
         public MainPage()
         {
@@ -41,6 +41,7 @@ namespace RemindMe
                     StartReminderBtn.Text = $"Stop reminder.";
                     StartReminderBtn.TextColor = Colors.Pink;
                     GeoCoordLabel.Text = $"Latitude: {startLocation.Latitude}, Longitude: {startLocation.Longitude}";
+                    cancellationTokenReminder = new CancellationTokenSource();
                     _ = PeriodicCheckHomeAsync(TimeSpan.FromSeconds(5), cancellationTokenReminder.Token);
                 }
                 else
@@ -69,7 +70,7 @@ namespace RemindMe
                 Location curLocation = await GetCurrentLocation();
                 if(curLocation != null && !curLocation.IsFromMockProvider)
                 {
-                    int distanceToHomeM = (int) (Location.CalculateDistance(dummy, curLocation, DistanceUnits.Kilometers) * 1000);
+                    int distanceToHomeM = (int) (Location.CalculateDistance(startLocation, curLocation, DistanceUnits.Kilometers) * 1000);
                     if (distanceToHomeM < allowedDistanceMeters)
                     {
                         GeoCoordLabel.Text = $"Close to home: {distanceToHomeM} meters.";
@@ -91,27 +92,14 @@ namespace RemindMe
             else
                 CounterBtn.Text = $"Clicked {count} times";
 
-            SemanticScreenReader.Announce(CounterBtn.Text);
         }
 
         private void OnEntryCompleted(object sender, EventArgs e)
         {
             GeolocationEntryName.Text = $"";
             GeoCoordLabel.Text = $"Geolocation saved";
-
-            // SemanticScreenReader.Announce(GeolocationEntryName.Text);
-            // SemanticScreenReader.Announce(CounterBtn.Text);
         }
 
-        private async void RunReminder()
-        {
-            while (!visitedAll)
-            {
-              //  await FooAsync();
-                await Task.Delay(TimeSpan.FromSeconds(5));
-            }
-
-        }
 
         private async void OnGeoClicked(object sender, EventArgs e)
         {
@@ -126,7 +114,6 @@ namespace RemindMe
 
 
         private CancellationTokenSource _cancelTokenSource;
-        private bool _isCheckingLocation;
 
         private async Task<Location> GetCurrentLocation()
         {
@@ -134,7 +121,6 @@ namespace RemindMe
             Location location = null;
             try
             {
-                _isCheckingLocation = true;
                 GeolocationRequest request = new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(10));
                 _cancelTokenSource = new CancellationTokenSource();
                 location = await Geolocation.Default.GetLocationAsync(request, _cancelTokenSource.Token);
@@ -146,19 +132,8 @@ namespace RemindMe
             catch (Exception ex)
             {
             }
-            finally
-            {
-                _isCheckingLocation = false;
-            }
 
             return location;
         }
-
-        public void CancelRequest()
-        {
-            if (_isCheckingLocation && _cancelTokenSource != null && _cancelTokenSource.IsCancellationRequested == false)
-                _cancelTokenSource.Cancel();
-        }
-
     }
 }
