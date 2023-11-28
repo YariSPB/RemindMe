@@ -74,6 +74,9 @@ namespace RemindMe
                     if (distanceToHomeM < allowedDistanceMeters)
                     {
                         GeoCoordLabel.Text = $"Close to home: {distanceToHomeM} meters.";
+                        int secondsToVibrate = 1;
+                        TimeSpan vibrationLength = TimeSpan.FromSeconds(secondsToVibrate);
+                        Vibration.Default.Vibrate(vibrationLength);
                     }
                     else
                     {
