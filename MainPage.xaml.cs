@@ -16,7 +16,7 @@ namespace RemindMe
         bool visitedAll = false;
         bool reminderworkStarted = false;
         Location startLocation = null;
-        int allowedDistanceMeters = 30;
+        int allowedDistanceMeters = 100;
         CancellationTokenSource cancellationTokenReminder;
 
         public MainPage()
