@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.Design;
+﻿using Plugin.LocalNotification;
+using Plugin.LocalNotification.AndroidOption;
+using System.ComponentModel.Design;
 using System.Threading;
 
 namespace RemindMe
@@ -74,10 +76,23 @@ namespace RemindMe
                     int distanceToHomeM = (int) (Location.CalculateDistance(startLocation, curLocation, DistanceUnits.Kilometers) * 1000);
                     if (distanceToHomeM < allowedDistanceMeters)
                     {
-                        GeoCoordLabel.Text = $"Going home? You are {distanceToHomeM} only meters away.";
-                        int secondsToVibrate = 1;
-                        TimeSpan vibrationLength = TimeSpan.FromSeconds(secondsToVibrate);
-                        Vibration.Default.Vibrate(vibrationLength);
+                        GeoCoordLabel.Text = $"Forgot something? You are {distanceToHomeM} only meters away.";
+                        //int secondsToVibrate = 1;
+                        //TimeSpan vibrationLength = TimeSpan.FromSeconds(secondsToVibrate);
+                        //Vibration.Default.Vibrate(vibrationLength);
+
+                        var localNotification = new NotificationRequest
+                        {
+                            CategoryType = NotificationCategoryType.Alarm,
+                            Title = "Remind me!",
+                            Description = "Have you forgotten something?",
+                            Android = new AndroidOptions
+                            {
+                                VibrationPattern = new long[] { 0, 200, 0, 200, 0, 200, 0, 200 },
+                            },
+                        };
+
+                        _ = LocalNotificationCenter.Current.Show(localNotification);
                     }
                     else
                     {
