@@ -56,6 +56,7 @@ namespace RemindMe
                 StartReminderBtn.Text = $"Begin reminding, please!";
                 GeoCoordLabel.Text = $"Finished. Shall we start again?";
                 StartReminderBtn.TextColor = Colors.DarkBlue;
+               // MainContentPage.BackgroundColor = Colors.White;
             }
 
             StartReminderBtn.IsEnabled = true;
@@ -73,7 +74,7 @@ namespace RemindMe
                     int distanceToHomeM = (int) (Location.CalculateDistance(startLocation, curLocation, DistanceUnits.Kilometers) * 1000);
                     if (distanceToHomeM < allowedDistanceMeters)
                     {
-                        GeoCoordLabel.Text = $"Close to home: {distanceToHomeM} meters.";
+                        GeoCoordLabel.Text = $"Going home? You are {distanceToHomeM} only meters away.";
                         int secondsToVibrate = 1;
                         TimeSpan vibrationLength = TimeSpan.FromSeconds(secondsToVibrate);
                         Vibration.Default.Vibrate(vibrationLength);
