@@ -32,14 +32,17 @@ namespace RemindMe
             }
 
             StartReminderBtn.IsEnabled = false;
+            StartReminderBtn.BackgroundColor = Colors.Gray;
+            StartReminderBtn.Text = "Wait...";
             if (!reminderworkStarted)
             {
                 startLocation = await GetCurrentLocation();
                 if (startLocation != null && !startLocation.IsFromMockProvider)
                 {
                     reminderworkStarted = true;
-                    StartReminderBtn.Text = $"Stop reminding.";
-                    GeoCoordLabel.Text = $"Home GPS location recorded. I will remind you within {allowedDistanceMeters} m distance";
+                    StartReminderBtn.BackgroundColor = defaultBtnBackgroundColor;
+                    StartReminderBtn.Text = $"Stop";
+                    GeoCoordLabel.Text = $"Only reminds when closer than {allowedDistanceMeters} meters from home";
                     //GeoCoordLabel.Text = $"Latitude: {startLocation.Latitude}, Longitude: {startLocation.Longitude}";
                     cancellationTokenReminder = new CancellationTokenSource();
                     _ = PeriodicCheckHomeAsync(TimeSpan.FromSeconds(checkFrequency), cancellationTokenReminder.Token);
@@ -53,7 +56,7 @@ namespace RemindMe
             {
                 reminderworkStarted = false;
                 cancellationTokenReminder.Cancel();
-                StartReminderBtn.Text = $"Start reminding!";
+                StartReminderBtn.Text = $"Start";
                 StartReminderBtn.BackgroundColor = defaultBtnBackgroundColor;
                 BackgroundColor = defaultpageContentBackgroundColor;
                 GeoCoordLabel.Text = $"Finished. Shall we start again?";
@@ -70,12 +73,12 @@ namespace RemindMe
             {
                 await Task.Delay(interval, cancellationToken);
                 Location curLocation = await GetCurrentLocation();
-                if(curLocation != null && !curLocation.IsFromMockProvider)
+                if(!cancellationToken.IsCancellationRequested && curLocation != null && !curLocation.IsFromMockProvider)
                 {
                     int distanceToHomeM = (int) (Location.CalculateDistance(startLocation, curLocation, DistanceUnits.Kilometers) * 1000);
                     if (distanceToHomeM < allowedDistanceMeters)
                     {
-                        GeoCoordLabel.Text = $"Forgetting things? U are just {distanceToHomeM} meters from home.";
+                        GeoCoordLabel.Text = $"Gentle reminder because you are close to home ({distanceToHomeM} meters).";
                         //int secondsToVibrate = 1;
                         //TimeSpan vibrationLength = TimeSpan.FromSeconds(secondsToVibrate);
                         //Vibration.Default.Vibrate(vibrationLength);
@@ -89,7 +92,7 @@ namespace RemindMe
                             Description = "Forgotten something?",
                         };
 
-                        await LocalNotificationCenter.Current.Show(localNotification);
+                        _=LocalNotificationCenter.Current.Show(localNotification);
                     }
                     else
                     {

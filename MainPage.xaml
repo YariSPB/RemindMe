@@ -22,27 +22,23 @@
                 FontSize="32"
                 HorizontalOptions="Center" />
 
-            <Label
-                Text="Not forgeting things."
-                SemanticProperties.HeadingLevel="Level2"
-                SemanticProperties.Description="Welcome to dot net Multi platform App U I"
-                FontSize="18"
-                HorizontalOptions="Center" />
-
 
             <Button
                 x:Name="StartReminderBtn"
                 FontSize="Large"
-                Text="Begin reminding"
+                BorderWidth="1"
+                BorderColor="Gray"
+                Text="Start"
                 SemanticProperties.Hint="Click to start reminder"
                 Clicked="OnStartReminderClicked"
                 HorizontalOptions="Center" />
 
             <Label
                 x:Name="GeoCoordLabel"
-                Text="Make sure to start from Home."
+                Text="Start before leaving home."
                 FontSize="18"
-                HorizontalOptions="Center" />
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center"/>
             
 
         </VerticalStackLayout>
