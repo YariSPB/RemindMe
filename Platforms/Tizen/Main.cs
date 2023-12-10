@@ -2,7 +2,7 @@ using Microsoft.Maui;
 using Microsoft.Maui.Hosting;
 using System;
 
-namespace MauiHiker
+namespace RemindMe
 {
     internal class Program : MauiApplication
     {

@@ -8,22 +8,18 @@ namespace RemindMe
     public partial class MainPage : ContentPage
     {
         int count = 0;
-        double targetLatitude = 42.099077;
-        double targetLongitude = 19.093777;
-        Location dummy = new Location(latitude: 42.099077, longitude: 19.093777);
-        //target 42.099077, 19.093777
-        //init 42.098414, 19.096313
-        double initLatitude = 42.098414;
-        double initLongitude = 19.096313;
-        bool visitedAll = false;
         bool reminderworkStarted = false;
         Location startLocation = null;
         int allowedDistanceMeters = 100;
         CancellationTokenSource cancellationTokenReminder;
+        Color defaultBtnBackgroundColor;
+        Color defaultpageContentBackgroundColor;
 
         public MainPage()
         {
             InitializeComponent();
+            defaultBtnBackgroundColor = StartReminderBtn.BackgroundColor;
+            defaultpageContentBackgroundColor = BackgroundColor;
         }
 
         private async void OnStartReminderClicked(object sender, EventArgs e)
@@ -40,9 +36,9 @@ namespace RemindMe
                 if (startLocation != null && !startLocation.IsFromMockProvider)
                 {
                     reminderworkStarted = true;
-                    StartReminderBtn.Text = $"Stop reminder.";
-                    StartReminderBtn.TextColor = Colors.Pink;
-                    GeoCoordLabel.Text = $"Latitude: {startLocation.Latitude}, Longitude: {startLocation.Longitude}";
+                    StartReminderBtn.Text = $"Stop RemindMe.";
+                    GeoCoordLabel.Text = $"Home GPS location recorded. I will remind you within {allowedDistanceMeters} m distance";
+                    //GeoCoordLabel.Text = $"Latitude: {startLocation.Latitude}, Longitude: {startLocation.Longitude}";
                     cancellationTokenReminder = new CancellationTokenSource();
                     _ = PeriodicCheckHomeAsync(TimeSpan.FromSeconds(5), cancellationTokenReminder.Token);
                 }
@@ -55,10 +51,11 @@ namespace RemindMe
             {
                 reminderworkStarted = false;
                 cancellationTokenReminder.Cancel();
-                StartReminderBtn.Text = $"Begin reminding, please!";
-                GeoCoordLabel.Text = $"Finished. Shall we start again?";
-                StartReminderBtn.TextColor = Colors.DarkBlue;
-               // MainContentPage.BackgroundColor = Colors.White;
+                StartReminderBtn.Text = $"Start RemindMe!";
+                StartReminderBtn.BackgroundColor = defaultBtnBackgroundColor;
+                BackgroundColor = defaultpageContentBackgroundColor;
+                GeoCoordLabel.Text = $"Finished. Shall we start again remembering things to do?";
+                StartReminderBtn.TextColor = Colors.White;
             }
 
             StartReminderBtn.IsEnabled = true;
@@ -69,23 +66,24 @@ namespace RemindMe
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(interval, cancellationToken);
-
                 Location curLocation = await GetCurrentLocation();
                 if(curLocation != null && !curLocation.IsFromMockProvider)
                 {
                     int distanceToHomeM = (int) (Location.CalculateDistance(startLocation, curLocation, DistanceUnits.Kilometers) * 1000);
                     if (distanceToHomeM < allowedDistanceMeters)
                     {
-                        GeoCoordLabel.Text = $"Forgot something? You are {distanceToHomeM} only meters away.";
+                        GeoCoordLabel.Text = $"Forgetting things? U are just {distanceToHomeM} meters from home.";
                         //int secondsToVibrate = 1;
                         //TimeSpan vibrationLength = TimeSpan.FromSeconds(secondsToVibrate);
                         //Vibration.Default.Vibrate(vibrationLength);
-
+                        StartReminderBtn.TextColor = Colors.Red;
+                        StartReminderBtn.BackgroundColor = Colors.White;
+                        BackgroundColor = Colors.IndianRed;
                         var localNotification = new NotificationRequest
                         {
                             CategoryType = NotificationCategoryType.Alarm,
                             Title = "Remind me!",
-                            Description = "Have you forgotten something?",
+                            Description = "Forgetting things?",
                             Android = new AndroidOptions
                             {
                                 VibrationPattern = new long[] { 0, 200, 0, 200, 0, 200, 0, 200 },
@@ -96,6 +94,10 @@ namespace RemindMe
                     }
                     else
                     {
+                        StartReminderBtn.BackgroundColor = defaultBtnBackgroundColor;
+                        StartReminderBtn.TextColor = Colors.White;
+                        StartReminderBtn.BackgroundColor = defaultBtnBackgroundColor;
+                        BackgroundColor = defaultpageContentBackgroundColor;
                         GeoCoordLabel.Text = $"Far from home: {distanceToHomeM} meters";
                     }
                 }
