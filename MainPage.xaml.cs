@@ -7,13 +7,13 @@ namespace RemindMe
 {
     public partial class MainPage : ContentPage
     {
-        int count = 0;
         bool reminderworkStarted = false;
         Location startLocation = null;
         int allowedDistanceMeters = 100;
         CancellationTokenSource cancellationTokenReminder;
         Color defaultBtnBackgroundColor;
         Color defaultpageContentBackgroundColor;
+        CancellationTokenSource _cancelTokenSource;
 
         public MainPage()
         {
@@ -22,6 +22,7 @@ namespace RemindMe
             defaultpageContentBackgroundColor = BackgroundColor;
         }
 
+        //Run Remind me
         private async void OnStartReminderClicked(object sender, EventArgs e)
         {
             if (!StartReminderBtn.IsEnabled)
@@ -51,16 +52,17 @@ namespace RemindMe
             {
                 reminderworkStarted = false;
                 cancellationTokenReminder.Cancel();
-                StartReminderBtn.Text = $"Start RemindMe!";
+                StartReminderBtn.Text = $"Start reminding!";
                 StartReminderBtn.BackgroundColor = defaultBtnBackgroundColor;
                 BackgroundColor = defaultpageContentBackgroundColor;
-                GeoCoordLabel.Text = $"Finished. Shall we start again remembering things to do?";
+                GeoCoordLabel.Text = $"Finished. Shall we start again?";
                 StartReminderBtn.TextColor = Colors.White;
             }
 
             StartReminderBtn.IsEnabled = true;
         }
 
+        // Remind me based on current GPS location
         private async Task PeriodicCheckHomeAsync(TimeSpan interval, CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
@@ -104,41 +106,8 @@ namespace RemindMe
             }
         }
 
-        private void OnCounterClicked(object sender, EventArgs e)
-        {
-            count++;
-
-            if (count == 1)
-                CounterBtn.Text = $"Clicked {count} time";
-            else
-                CounterBtn.Text = $"Clicked {count} times";
-
-        }
-
-        private void OnEntryCompleted(object sender, EventArgs e)
-        {
-            GeolocationEntryName.Text = $"";
-            GeoCoordLabel.Text = $"Geolocation saved";
-        }
-
-
-        private async void OnGeoClicked(object sender, EventArgs e)
-        {
-            Location location = await GetCurrentLocation();
-            if (location != null && !location.IsFromMockProvider)
-                GeoCoordLabel.Text = $"Latitude: {location.Latitude}, Longitude: {location.Longitude}, Altitude: {location.Altitude}";
-            else
-                GeoCoordLabel.Text = $"Geolocation timeout";
-
-            SemanticScreenReader.Announce(GeoCoordLabel.Text);
-        }
-
-
-        private CancellationTokenSource _cancelTokenSource;
-
         private async Task<Location> GetCurrentLocation()
         {
-
             Location location = null;
             try
             {
