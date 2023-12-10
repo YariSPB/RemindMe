@@ -33,7 +33,7 @@
             <Button
                 x:Name="StartReminderBtn"
                 FontSize="Large"
-                Text="Begin reminding, please!"
+                Text="Begin reminding"
                 SemanticProperties.Hint="Click to start reminder"
                 Clicked="OnStartReminderClicked"
                 HorizontalOptions="Center" />

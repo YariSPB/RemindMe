@@ -8,6 +8,7 @@ namespace RemindMe
     public partial class MainPage : ContentPage
     {
         bool reminderworkStarted = false;
+        int checkFrequency = 10;
         Location startLocation = null;
         int allowedDistanceMeters = 100;
         CancellationTokenSource cancellationTokenReminder;
@@ -37,11 +38,11 @@ namespace RemindMe
                 if (startLocation != null && !startLocation.IsFromMockProvider)
                 {
                     reminderworkStarted = true;
-                    StartReminderBtn.Text = $"Stop RemindMe.";
+                    StartReminderBtn.Text = $"Stop reminding.";
                     GeoCoordLabel.Text = $"Home GPS location recorded. I will remind you within {allowedDistanceMeters} m distance";
                     //GeoCoordLabel.Text = $"Latitude: {startLocation.Latitude}, Longitude: {startLocation.Longitude}";
                     cancellationTokenReminder = new CancellationTokenSource();
-                    _ = PeriodicCheckHomeAsync(TimeSpan.FromSeconds(5), cancellationTokenReminder.Token);
+                    _ = PeriodicCheckHomeAsync(TimeSpan.FromSeconds(checkFrequency), cancellationTokenReminder.Token);
                 }
                 else
                 {
@@ -85,14 +86,10 @@ namespace RemindMe
                         {
                             CategoryType = NotificationCategoryType.Alarm,
                             Title = "Remind me!",
-                            Description = "Forgetting things?",
-                            Android = new AndroidOptions
-                            {
-                                VibrationPattern = new long[] { 0, 200, 0, 200, 0, 200, 0, 200 },
-                            },
+                            Description = "Forgotten something?",
                         };
 
-                        _ = LocalNotificationCenter.Current.Show(localNotification);
+                        await LocalNotificationCenter.Current.Show(localNotification);
                     }
                     else
                     {
