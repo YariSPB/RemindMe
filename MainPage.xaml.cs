@@ -42,7 +42,7 @@ namespace RemindMe
                     reminderworkStarted = true;
                     StartReminderBtn.BackgroundColor = defaultBtnBackgroundColor;
                     StartReminderBtn.Text = $"Stop";
-                    GeoCoordLabel.Text = $"Only reminds when closer than {allowedDistanceMeters} meters from home";
+                    GeoCoordLabel.Text = $"Will remind when closer than {allowedDistanceMeters} meters from home";
                     //GeoCoordLabel.Text = $"Latitude: {startLocation.Latitude}, Longitude: {startLocation.Longitude}";
                     cancellationTokenReminder = new CancellationTokenSource();
                     _ = PeriodicCheckHomeAsync(TimeSpan.FromSeconds(checkFrequency), cancellationTokenReminder.Token);
@@ -87,12 +87,13 @@ namespace RemindMe
                         BackgroundColor = Colors.IndianRed;
                         var localNotification = new NotificationRequest
                         {
-                            CategoryType = NotificationCategoryType.Alarm,
+                            CategoryType = NotificationCategoryType.Reminder,
                             Title = "Remind me!",
                             Description = "Forgotten something?",
                         };
 
-                        _=LocalNotificationCenter.Current.Show(localNotification);
+                        await LocalNotificationCenter.Current.Show(localNotification);
+                      //  LocalNotificationCenter.Current.
                     }
                     else
                     {
