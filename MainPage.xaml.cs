@@ -45,6 +45,8 @@ namespace RemindMe
                     GeoCoordLabel.Text = $"Will remind when closer than {allowedDistanceMeters} meters from home";
                     //GeoCoordLabel.Text = $"Latitude: {startLocation.Latitude}, Longitude: {startLocation.Longitude}";
                     cancellationTokenReminder = new CancellationTokenSource();
+                   // startfore
+                   
                     _ = PeriodicCheckHomeAsync(TimeSpan.FromSeconds(checkFrequency), cancellationTokenReminder.Token);
                 }
                 else
