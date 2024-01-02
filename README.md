@@ -1,2 +1,2 @@
 # RemindMe
-Android app to remind me things to do 
+MAUI .NET app to remind me things to do for Android phone
