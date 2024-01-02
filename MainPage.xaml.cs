@@ -1,26 +1,86 @@
-﻿using Plugin.LocalNotification;
+﻿//using Android.Gms.Tasks;
+using Plugin.LocalNotification;
 using Plugin.LocalNotification.AndroidOption;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Threading;
 
 namespace RemindMe
 {
     public partial class MainPage : ContentPage
     {
+        IBackgroundGPSService backgroundGPSService;
         bool reminderworkStarted = false;
-        int checkFrequency = 10;
+       // int checkFrequency = 10;
         Location startLocation = null;
         int allowedDistanceMeters = 100;
-        CancellationTokenSource cancellationTokenReminder;
+        System.Threading.CancellationTokenSource cancellationTokenReminder;
         Color defaultBtnBackgroundColor;
         Color defaultpageContentBackgroundColor;
-        CancellationTokenSource _cancelTokenSource;
+        System.Threading.CancellationTokenSource _cancelTokenSource;
+        CancellationToken _cancellationToken;
 
-        public MainPage()
+        public MainPage(IBackgroundGPSService backgroundGPSService)
         {
             InitializeComponent();
+            this.backgroundGPSService = backgroundGPSService;
             defaultBtnBackgroundColor = StartReminderBtn.BackgroundColor;
             defaultpageContentBackgroundColor = BackgroundColor;
+
+            if(DeviceInfo.Platform == DevicePlatform.Android)
+            {
+                MessagingCenter.Subscribe<Location>(this, "Location", message =>
+                {
+                    if (_cancellationToken.IsCancellationRequested) {
+                        return;
+                    }
+                       // fdfdfdf;
+                    MainThread.BeginInvokeOnMainThread(() => {
+                        int distanceToHomeM = (int)(Location.CalculateDistance(startLocation, message, DistanceUnits.Kilometers) * 1000);
+
+                        if (distanceToHomeM < allowedDistanceMeters)
+                        {
+                            // too close
+                            GeoCoordLabel.Text = $"Gentle reminder because you are close to home ({distanceToHomeM} meters).";
+                            StartReminderBtn.TextColor = Colors.Red;
+                            StartReminderBtn.BackgroundColor = Colors.White;
+                            BackgroundColor = Colors.IndianRed;
+                            
+                            var localNotification = new NotificationRequest
+                            {
+                                CategoryType = NotificationCategoryType.Reminder,
+                                Title = "Remind me!",
+                                Description = "Forgotten something?",
+                            };
+
+                            LocalNotificationCenter.Current.Show(localNotification);
+                            //  LocalNotificationCenter.Current.
+                        }
+                        else
+                        {
+                            // too far
+                            StartReminderBtn.BackgroundColor = defaultBtnBackgroundColor;
+                            StartReminderBtn.TextColor = Colors.White;
+                            StartReminderBtn.BackgroundColor = defaultBtnBackgroundColor;
+                            BackgroundColor = defaultpageContentBackgroundColor;
+                            GeoCoordLabel.Text = $"Far from home: {distanceToHomeM} meters";
+                        }
+                    });
+                });
+
+                MessagingCenter.Subscribe<LocationErrorMessage>(this, "LocationError", message =>
+                {
+                    if (_cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    MainThread.BeginInvokeOnMainThread(() => {
+                        Debug.WriteLine("Location error");
+                        GeoCoordLabel.Text = $"Location error";
+                    });
+                });
+            }
         }
 
         //Run Remind me
@@ -44,10 +104,11 @@ namespace RemindMe
                     StartReminderBtn.Text = $"Stop";
                     GeoCoordLabel.Text = $"Will remind when closer than {allowedDistanceMeters} meters from home";
                     //GeoCoordLabel.Text = $"Latitude: {startLocation.Latitude}, Longitude: {startLocation.Longitude}";
-                    cancellationTokenReminder = new CancellationTokenSource();
-                   // startfore
-                   
-                    _ = PeriodicCheckHomeAsync(TimeSpan.FromSeconds(checkFrequency), cancellationTokenReminder.Token);
+                    cancellationTokenReminder = new System.Threading.CancellationTokenSource();
+                    _cancellationToken = cancellationTokenReminder.Token;
+                    // startfore
+                    backgroundGPSService.Start();
+                    //_ = PeriodicCheckHomeAsync(TimeSpan.FromSeconds(checkFrequency), cancellationTokenReminder.Token);
                 }
                 else
                 {
@@ -57,7 +118,9 @@ namespace RemindMe
             else
             {
                 reminderworkStarted = false;
+                // comment next
                 cancellationTokenReminder.Cancel();
+                backgroundGPSService.Stop();
                 StartReminderBtn.Text = $"Start";
                 StartReminderBtn.BackgroundColor = defaultBtnBackgroundColor;
                 BackgroundColor = defaultpageContentBackgroundColor;
@@ -69,7 +132,7 @@ namespace RemindMe
         }
 
         // Remind me based on current GPS location
-        private async Task PeriodicCheckHomeAsync(TimeSpan interval, CancellationToken cancellationToken)
+        private async System.Threading.Tasks.Task PeriodicCheckHomeAsync(TimeSpan interval, System.Threading.CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -78,8 +141,10 @@ namespace RemindMe
                 if(!cancellationToken.IsCancellationRequested && curLocation != null && !curLocation.IsFromMockProvider)
                 {
                     int distanceToHomeM = (int) (Location.CalculateDistance(startLocation, curLocation, DistanceUnits.Kilometers) * 1000);
+ 
                     if (distanceToHomeM < allowedDistanceMeters)
                     {
+                        // too close
                         GeoCoordLabel.Text = $"Gentle reminder because you are close to home ({distanceToHomeM} meters).";
                         //int secondsToVibrate = 1;
                         //TimeSpan vibrationLength = TimeSpan.FromSeconds(secondsToVibrate);
@@ -99,6 +164,7 @@ namespace RemindMe
                     }
                     else
                     {
+                        // too far
                         StartReminderBtn.BackgroundColor = defaultBtnBackgroundColor;
                         StartReminderBtn.TextColor = Colors.White;
                         StartReminderBtn.BackgroundColor = defaultBtnBackgroundColor;

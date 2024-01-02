@@ -8,6 +8,11 @@ namespace RemindMe
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
+#if ANDROID
+            builder.Services.AddTransient<IBackgroundGPSService, BackgroundGPSService>();
+#endif
+
+            builder.Services.AddSingleton<MainPage>();
             builder
                 .UseMauiApp<App>()
                 .ConfigureFonts(fonts =>
